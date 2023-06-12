@@ -1,14 +1,4 @@
-#include <Python.h>
-
-/*
- * File: 13-is_palindrome.c
- * Auth: Quincy Ochieng
- */
-
 #include "lists.h"
-
-listint_t *reverse_listint(listint_t **head);
-int is_palindrome(listint_t **head);
 
 /**
  * reverse_listint - Reverses a singly-linked listint_t list.
@@ -18,17 +8,19 @@ int is_palindrome(listint_t **head);
  */
 listint_t *reverse_listint(listint_t **head)
 {
-	listint_t *current = *head, *next, *previous = NULL;
+	listint_t *current = *head;
+	listint_t *prev = NULL;
+	listint_t *next = NULL;
 
-	while (current)
+	while (current != NULL)
 	{
-	next = current->next;
-	current->next = previous;
-	previous = current;
-	current = next;
+		next = current->next;
+		current->next = prev;
+		prev = current;
+		current = next;
 	}
 
-	*head = previous;
+	*head = prev;
 	return (*head);
 }
 
@@ -41,39 +33,75 @@ listint_t *reverse_listint(listint_t **head)
  */
 int is_palindrome(listint_t **head)
 {
-	listint_t *temp, *reversed, *middle;
-	size_t size = 0, i;
-
 	if (*head == NULL || (*head)->next == NULL)
-	return (1);
+		return (1);
 
-	temp = *head;
-	while (temp)
+	listint_t *slow = *head;
+	listint_t *fast = *head;
+	listint_t *prev_slow = *head;
+	listint_t *second_half = NULL;
+	listint_t *mid_node = NULL;
+	int is_palindrome = 1;
+
+	while (fast != NULL && fast->next != NULL)
 	{
-	size++;
-	temp = temp->next;
+		fast = fast->next->next;
+		prev_slow = slow;
+		slow = slow->next;
 	}
 
-	temp = *head;
-	for (i = 0; i < (size / 2) - 1; i++)
-	temp = temp->next;
-
-	if ((size % 2) == 0 && temp->n != temp->next->n)
-	return (0);
-
-	temp = temp->next->next;
-	reversed = reverse_listint(&temp);
-	middle = reversed;
-
-	temp = *head;
-	while (reversed)
+	if (fast != NULL)
 	{
-	if (temp->n != reversed->n)
-	return (0);
-	temp = temp->next;
-	reversed = reversed->next;
+		mid_node = slow;
+		slow = slow->next;
 	}
-	reverse_listint(&middle);
 
-	return (1);
+	second_half = slow;
+	prev_slow->next = NULL;
+	reverse_listint(&second_half);
+	is_palindrome = compare_lists(*head, second_half);
+
+	if (mid_node != NULL)
+	{
+		prev_slow->next = mid_node;
+		mid_node->next = second_half;
+	}
+	else
+	{
+		prev_slow->next = second_half;
+	}
+
+	return (is_palindrome);
+}
+
+/**
+ * compare_lists - Compares two linked lists for equality.
+ * @head1: A pointer to the head of the first linked list.
+ * @head2: A pointer to the head of the second linked list.
+ *
+ * Return: If the lists are equal - 1.
+ *         If the lists are not equal - 0.
+ */
+int compare_lists(listint_t *head1, listint_t *head2)
+{
+	listint_t *temp1 = head1;
+	listint_t *temp2 = head2;
+
+	while (temp1 && temp2)
+	{
+		if (temp1->n == temp2->n)
+		{
+			temp1 = temp1->next;
+			temp2 = temp2->next;
+		}
+		else
+		{
+			return (0);
+		}
+	}
+
+	if (temp1 == NULL && temp2 == NULL)
+		return (1);
+
+	return (0);
 }
